@@ -21,6 +21,7 @@ export type Project = {
   stack: string[];
   href: string;
   tone: string;
+  img:string
 };
 
 export type Fact = {
@@ -50,7 +51,11 @@ export const portfolio = {
     { label: "Contact", href: "#contact" },
   ] satisfies NavItem[],
   socialLinks: [
-    { label: "GitHub", href: "https://github.com/kaung-set107", icon: "github" },
+    {
+      label: "GitHub",
+      href: "https://github.com/kaung-set107",
+      icon: "github",
+    },
     {
       label: "LinkedIn",
       href: "https://www.linkedin.com/in/kaung-set-hein-900b2626b",
@@ -67,19 +72,47 @@ export const portfolio = {
   skillGroups: [
     {
       title: "Frontend",
-      items: ["React.js", "Next.js", "TypeScript", "JavaScript ES6+", "Tailwind CSS", "Bootstrap", "NextUI"],
+      items: [
+        "React.js",
+        "Next.js",
+        "TypeScript",
+        "JavaScript ES6+",
+        "Tailwind CSS",
+        "Bootstrap",
+        "NextUI",
+      ],
     },
     {
       title: "Backend & Data",
-      items: ["Node.js", "Express.js", "RESTful APIs", "JWT Authentication", "MongoDB"],
+      items: [
+        "Node.js",
+        "Express.js",
+        "RESTful APIs",
+        "JWT Authentication",
+        "MongoDB",
+      ],
     },
     {
       title: "Cloud & Automation",
-      items: ["AWS Lightsail", "n8n", "Webhooks", "API Integration", "Server Configuration"],
+      items: [
+        "AWS Lightsail",
+        "n8n",
+        "Webhooks",
+        "API Integration",
+        "Server Configuration",
+      ],
     },
     {
       title: "Delivery & Collaboration",
-      items: ["Agile", "Scrum", "Git", "GitHub", "GitLab", "Jira", "Microsoft Teams"],
+      items: [
+        "Agile",
+        "Scrum",
+        "Git",
+        "GitHub",
+        "GitLab",
+        "Jira",
+        "Microsoft Teams",
+      ],
     },
   ] satisfies SkillGroup[],
   featuredProjects: [
@@ -87,28 +120,34 @@ export const portfolio = {
       title: "POS & Finance Web Application",
       description:
         "Developed the frontend for a multi-branch clinic finance system with application dashboards and operational reporting.",
-      outcome: "Multi-branch finance workflows with maintainable dashboard interfaces.",
+      outcome:
+        "Multi-branch finance workflows with maintainable dashboard interfaces.",
       stack: ["React.js", "Next.js", "TypeScript"],
       href: "#contact",
       tone: "from-cyan-400/35 via-sky-500/15 to-indigo-500/25",
+      img: "/pos.png",
     },
     {
       title: "Team Learning Management System",
       description:
         "Developed Admin, Instructor, and Student panels with examinations, approval workflows, and role-based learning operations.",
-      outcome: "A complete multi-panel learning workflow for teams and instructors.",
+      outcome:
+        "A complete multi-panel learning workflow for teams and instructors.",
       stack: ["Next.js", "TypeScript", "Node.js"],
       href: "#contact",
       tone: "from-fuchsia-400/30 via-violet-500/15 to-slate-500/25",
+      img: "/lms.png",
     },
     {
       title: "E-Learning Platform",
       description:
         "Built a full-stack, multi-panel education platform with email communication through EmailJS and Nodemailer integrations.",
-      outcome: "Integrated frontend, backend, and email workflows in one platform.",
+      outcome:
+        "Integrated frontend, backend, and email workflows in one platform.",
       stack: ["React.js", "Node.js", "EmailJS"],
       href: "#contact",
       tone: "from-emerald-400/30 via-teal-500/15 to-cyan-500/20",
+      img: "/e.png",
     },
   ] satisfies Project[],
   experience: [

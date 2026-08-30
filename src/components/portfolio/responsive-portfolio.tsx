@@ -20,7 +20,7 @@ import {
   Wifi,
   BatteryFull,
 } from "lucide-react";
-import { useState } from "react";
+import { type MouseEvent, type TouchEvent, useRef, useState } from "react";
 
 import { portfolio } from "@/content/portfolio";
 
@@ -102,7 +102,7 @@ function AppIcon({
 
 function AboutContent({ tablet = false }: { tablet?: boolean }) {
   return (
-    <div className={tablet ? "grid items-center gap-7 sm:grid-cols-[180px_minmax(0,1fr)]" : "text-center"}>
+    <div className={tablet ? "grid items-center gap-7 sm:grid-cols-[180px_minmax(0,1fr)]" : "flex flex-col justify-center items-center text-center"}>
       <div className={tablet ? "mx-auto" : "mx-auto"}>
         <div className={`relative overflow-hidden rounded-full border border-white/20 bg-violet-300/15 shadow-[0_24px_60px_rgba(15,23,42,0.45)] ${tablet ? "h-36 w-36" : "h-28 w-28"}`}>
           <Image src="/ksh.jpg" alt="Kaung Set Hein" fill sizes={tablet ? "144px" : "112px"} className="object-cover object-center" priority />
@@ -138,7 +138,7 @@ function ProjectsContent() {
       {portfolio.featuredProjects.map((project, index) => (
         <article key={project.title} className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1020]/80 shadow-[0_14px_38px_rgba(2,6,23,0.3)]">
           <div className="relative h-28 overflow-hidden">
-            <Image src="/maclock.jpg" alt="" fill sizes="(max-width: 767px) 100vw, 620px" className={`object-cover ${index === 0 ? "object-[center_65%]" : index === 1 ? "object-[35%_55%]" : "object-[75%_58%]"}`} />
+            <Image src={project?.img} alt="" fill sizes="(max-width: 767px) 100vw, 620px" className={`object-cover ${index === 0 ? "object-[center_65%]" : index === 1 ? "object-[35%_55%]" : "object-[75%_58%]"}`} />
             <div className={`absolute inset-0 bg-gradient-to-br ${project.tone} mix-blend-color`} />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020] via-transparent to-transparent" />
             <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-slate-950/45 px-2.5 py-1 text-[9px] uppercase tracking-[0.18em] text-white/80 backdrop-blur-lg">Project 0{index + 1}</div>
@@ -234,9 +234,80 @@ function PageContent({ page, tablet = false }: { page: PortfolioPage; tablet?: b
 
 const mobileSkills = portfolio.skillGroups.flatMap((group) => group.items).slice(0, 8);
 
-function MobileHome({ onOpen }: { onOpen: (page: PortfolioPage) => void }) {
+function MobileHome({
+  onOpen,
+  reduceMotion = false,
+}: {
+  onOpen: (page: PortfolioPage) => void;
+  reduceMotion?: boolean;
+}) {
   const [featuredProjectIndex, setFeaturedProjectIndex] = useState(0);
-  const project = portfolio.featuredProjects[featuredProjectIndex];
+  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeHandledRef = useRef(false);
+  const featuredProjects = portfolio.featuredProjects;
+  const projectCount = featuredProjects.length;
+  const project = featuredProjects[featuredProjectIndex];
+
+  const showProject = (nextIndex: number) => {
+    if (nextIndex === featuredProjectIndex) {
+      return;
+    }
+
+    setSlideDirection(nextIndex > featuredProjectIndex ? 1 : -1);
+    setFeaturedProjectIndex(nextIndex);
+  };
+
+  const handleProjectTouchStart = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+
+    if (!touch) {
+      return;
+    }
+
+    swipeHandledRef.current = false;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleProjectTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+
+    touchStartRef.current = null;
+
+    if (!start || !touch) {
+      return;
+    }
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const isHorizontalSwipe = Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (!isHorizontalSwipe) {
+      return;
+    }
+
+    const nextIndex = deltaX < 0
+      ? Math.min(featuredProjectIndex + 1, projectCount - 1)
+      : Math.max(featuredProjectIndex - 1, 0);
+
+    if (nextIndex === featuredProjectIndex) {
+      return;
+    }
+
+    swipeHandledRef.current = true;
+    showProject(nextIndex);
+  };
+
+  const handleProjectClickCapture = (event: MouseEvent<HTMLElement>) => {
+    if (!swipeHandledRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    swipeHandledRef.current = false;
+  };
 
   return (
     <main className="pb-24">
@@ -270,9 +341,25 @@ function MobileHome({ onOpen }: { onOpen: (page: PortfolioPage) => void }) {
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.article key={project.title} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1020]/80 shadow-[0_16px_45px_rgba(2,6,23,0.38)]">
+          <motion.article
+            key={project.title}
+            initial={reduceMotion ? false : { opacity: 0, x: slideDirection > 0 ? 16 : -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: slideDirection > 0 ? -16 : 16 }}
+            className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1020]/80 shadow-[0_16px_45px_rgba(2,6,23,0.38)]"
+            style={{ touchAction: "pan-y" }}
+            onTouchStart={handleProjectTouchStart}
+            onTouchEnd={handleProjectTouchEnd}
+            onClickCapture={handleProjectClickCapture}
+          >
             <button type="button" onClick={() => onOpen("projects")} className="relative block h-28 w-full overflow-hidden text-left" aria-label={`View ${project.title}`}>
-              <Image src="/maclock.jpg" alt="" fill sizes="(max-width: 767px) 100vw, 0px" className="object-cover object-[center_62%]" />
+              <Image
+                src={project.img}
+                alt=""
+                fill
+                sizes="(max-width: 767px) 100vw, 0px"
+                className={`object-cover ${featuredProjectIndex === 0 ? "object-[center_62%]" : featuredProjectIndex === 1 ? "object-[35%_55%]" : "object-[75%_58%]"}`}
+              />
               <span className={`absolute inset-0 bg-gradient-to-br ${project.tone} mix-blend-color`} />
               <span className="absolute inset-0 bg-gradient-to-t from-[#090d1b] via-transparent to-transparent" />
             </button>
@@ -288,8 +375,14 @@ function MobileHome({ onOpen }: { onOpen: (page: PortfolioPage) => void }) {
         </AnimatePresence>
 
         <div className="mt-2.5 flex justify-center gap-1.5" aria-label="Featured project selector">
-          {portfolio.featuredProjects.map((item, index) => (
-            <button key={item.title} type="button" onClick={() => setFeaturedProjectIndex(index)} className={`h-1.5 rounded-full transition-all ${featuredProjectIndex === index ? "w-4 bg-violet-400" : "w-1.5 bg-white/20"}`} aria-label={`Show project ${index + 1}`} />
+          {featuredProjects.map((item, index) => (
+            <button
+              key={item.title}
+              type="button"
+              onClick={() => showProject(index)}
+              className={`h-1.5 rounded-full transition-all ${featuredProjectIndex === index ? "w-4 bg-violet-400" : "w-1.5 bg-white/20"}`}
+              aria-label={`Show project ${index + 1}`}
+            />
           ))}
         </div>
       </section>
@@ -355,7 +448,7 @@ function MobilePortfolio() {
 
         <AnimatePresence mode="wait">
           {activePage === null ? (
-            <motion.div key="home" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }}><MobileHome onOpen={openPage} /></motion.div>
+            <motion.div key="home" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }}><MobileHome onOpen={openPage} reduceMotion={Boolean(reduceMotion)} /></motion.div>
           ) : (
             <motion.main key={activePage} initial={reduceMotion ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }} className="min-h-[calc(100svh-2.25rem)] px-4 pb-24 pt-3">
               <div className="sticky top-9 z-20 -mx-1 mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1022]/80 px-2 py-2 backdrop-blur-2xl">
